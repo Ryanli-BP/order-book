@@ -5,8 +5,8 @@
 class Trade {
 public:
     Trade(const TradeInfo& bidTrade, const TradeInfo& askTrade)
-    : bidTrade_ { bidTrade_ }
-    , askTrade_ { askTrade_ }
+    : bidTrade_ { bidTrade }
+    , askTrade_ { askTrade }
     {
     }
 

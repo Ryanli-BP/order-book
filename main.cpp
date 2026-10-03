@@ -1,9 +1,8 @@
 #include "Orderbook.h"
-#include <memory>
+#include "TerminalUI.h"
 
 int main() {
-    Orderbook Orderbook{};
-
-    OrderPointer order1 = std::make_shared<Order>(OrderType::GoodTillCancel, 1, Side::Buy, 100, 10);
-    
+    Orderbook orderbook{};
+    TerminalUI ui{ orderbook };
+    ui.Run();
 }

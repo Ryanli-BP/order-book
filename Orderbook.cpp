@@ -20,67 +20,31 @@ bool Orderbook::CanMatch(Side side, Price price) const {
     }
 }
 
-Trades Orderbook::MatchOrders() {
-    Trades trades;
-    trades.reserve(orders_.size());
+bool Orderbook::CanFullyFill(Side side, Price price, Quantity quantity) const {
+    Quantity availableQuantity{};
 
-    while (true) {
-        if (bids_.empty() || asks_.empty())
-            break;
-
-        auto& [bidPrice, bidLevel] = *bids_.begin();
-        auto& [askPrice, askLevel] = *asks_.begin();
-
-        if (bidPrice < askPrice)
-            break;
-
-        while (bidLevel.size() && askLevel.size()) {
-            auto& bid =  bidLevel.front();
-            auto& ask = askLevel.front();
-
-            Quantity quantity = std::min(bid->GetRemainingQuantity(), ask->GetRemainingQuantity());
-
-            bid->Fill(quantity);
-            ask->Fill(quantity);
-
-            if (bid->isFilled()) { //bid of order(ID) filled completely
-                orders_.erase(bid->GetOrderId());
-                bidLevel.pop_front();
-
+    if (side == Side::Buy) {
+        for(const auto& [levelPrice, level] : asks_) {
+            if (levelPrice > price) {
+                break;
             }
-            if (ask->isFilled()) {
-                askLevel.pop_front();
-                orders_.erase(ask->GetOrderId());
+            for (const auto& order : level) {
+                availableQuantity += order->GetRemainingQuantity();
             }
-
-            if (bidLevel.empty()) { //bids of that price filled completely
-                bids_.erase(bidPrice);
+        }
+    }
+    else {
+        for(const auto& [levelPrice, level] : bids_) { 
+            if (levelPrice < price) {
+                break;
             }
-            if (askLevel.empty()) { //bids of that price filled completely
-                asks_.erase(askPrice);
-            }
-            
-            trades.push_back(Trade{ //make the trade
-                TradeInfo{ bid->GetOrderId(), bid->GetPrice(), quantity },
-                TradeInfo{ ask->GetOrderId(), ask->GetPrice(), quantity } 
-            });
+            for (const auto& order : level) { 
+                availableQuantity += order->GetRemainingQuantity(); 
+            } 
         }
     }
 
-    if (!bids_.empty()) {
-        auto& [_, bids] = *bids_.begin();
-        auto& order = bids.front();
-        if (order->GetOrderType() == OrderType::FillAndKill)
-            CancelOrder(order->GetOrderId());
-    }
-    if (!asks_.empty()) {
-        auto& [_, asks] = *asks_.begin();
-        auto& order = asks.front();
-        if (order->GetOrderType() == OrderType::FillAndKill)
-            CancelOrder(order->GetOrderId());
-    }
-
-    return trades;
+    return availableQuantity >= quantity;
 }
 
 Trades Orderbook::AddOrder(OrderPointer order) {
@@ -88,6 +52,9 @@ Trades Orderbook::AddOrder(OrderPointer order) {
         return {};
 
     if (order->GetOrderType() == OrderType::FillAndKill && !CanMatch(order->GetSide(), order->GetPrice()))
+        return {};
+
+    if (order->GetOrderType() == OrderType::FillOrKill && !CanFullyFill(order->GetSide(), order->GetPrice(), order->GetInitialQuantity()))
         return {};
 
     if (order->GetOrderType() == OrderType::Market) {
@@ -124,6 +91,69 @@ Trades Orderbook::AddOrder(OrderPointer order) {
     return MatchOrders();
 }
 
+Trades Orderbook::MatchOrders() {
+    Trades trades;
+    trades.reserve(orders_.size());
+
+    while (true) {
+        if (bids_.empty() || asks_.empty())
+            break;
+
+        auto& [bidPrice, bidLevel] = *bids_.begin();
+        auto& [askPrice, askLevel] = *asks_.begin();
+
+        if (bidPrice < askPrice)
+            break;
+
+        while (bidLevel.size() && askLevel.size()) {
+            auto bid =  bidLevel.front();
+            auto ask = askLevel.front();
+
+            Quantity quantity = std::min(bid->GetRemainingQuantity(), ask->GetRemainingQuantity());
+
+            bid->Fill(quantity);
+            ask->Fill(quantity);
+
+            if (bid->isFilled()) {
+                orders_.erase(bid->GetOrderId());
+                bidLevel.pop_front();
+
+            }
+            if (ask->isFilled()) {
+                askLevel.pop_front();
+                orders_.erase(ask->GetOrderId());
+            }
+            
+            trades.push_back(Trade{
+                TradeInfo{ bid->GetOrderId(), bid->GetPrice(), quantity },
+                TradeInfo{ ask->GetOrderId(), ask->GetPrice(), quantity } 
+            });
+        }
+
+        if (bidLevel.empty()) {
+            bids_.erase(bidPrice);
+        }
+        if (askLevel.empty()) {
+            asks_.erase(askPrice);
+        }
+    }
+
+    if (!bids_.empty()) {
+        auto& [_, bids] = *bids_.begin();
+        auto& order = bids.front();
+        if (order->GetOrderType() == OrderType::FillAndKill)
+            CancelOrder(order->GetOrderId());
+    }
+    if (!asks_.empty()) {
+        auto& [_, asks] = *asks_.begin();
+        auto& order = asks.front();
+        if (order->GetOrderType() == OrderType::FillAndKill)
+            CancelOrder(order->GetOrderId());
+    }
+
+    return trades;
+}
+
 void Orderbook::CancelOrder(OrderId orderId) {
     if (!orders_.contains(orderId))
         return;
@@ -154,9 +184,9 @@ Trades Orderbook::ModifyOrder(OrderModify order) {
     if (!orders_.contains(order.GetOrderId()))
         return {};
     
-    const auto& [existingOrder, _] = orders_.at(order.GetOrderId());
+    const auto type = orders_.at(order.GetOrderId()).order_->GetOrderType(); //copy before CancelOrder erases the entry
     CancelOrder(order.GetOrderId());
-    return AddOrder(order.ToOrderPointer(existingOrder->GetOrderType()));
+    return AddOrder(order.ToOrderPointer(type));
 }
 
 OrderbookLevelInfos Orderbook::GetOrderInfos() const {

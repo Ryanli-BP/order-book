@@ -27,6 +27,8 @@ private:
 
     bool CanMatch(Side side, Price price) const;
 
+    bool CanFullyFill(Side side, Price price, Quantity quantity) const;
+
     Trades MatchOrders();
 
 public:
@@ -38,6 +40,8 @@ public:
     Trades ModifyOrder(OrderModify order);
 
     std::size_t Size() const { return orders_.size(); }
+
+    bool HasOrder(OrderId orderId) const { return orders_.contains(orderId); }
 
     OrderbookLevelInfos GetOrderInfos() const;
 };

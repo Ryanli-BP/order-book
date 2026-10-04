@@ -9,10 +9,11 @@
 namespace {
     const std::string helpText{
         "commands:\n"
-        "  buy|sell <price> <qty> <gtc|fak|fok>       place a limit order\n"
+        "  buy|sell <price> <qty> <gtc|gfd|fak|fok>   place a limit order\n"
         "  market buy|sell <qty>                      place a market order\n"
         "  cancel <id>                                cancel a resting order\n"
         "  modify <id> buy|sell <price> <qty>         replace a resting order\n"
+        "  eod                                        end of day: cancel all gfd orders\n"
         "  help                                       show this list\n"
         "  Ctrl+D                                     quit"
     };
@@ -71,6 +72,9 @@ namespace {
         else if (typeWord == "fok") {
             type = OrderType::FillOrKill;
         }
+        else if (typeWord == "gfd") {
+            type = OrderType::GoodForDay;
+        }
         else {
             in.setstate(std::ios::failbit);
         }
@@ -110,7 +114,7 @@ void TerminalUI::HandleCommand(const std::string& line) {
 
         OrderType type;
         if (!(in >> price >> quantity >> type)) {
-            status_ = "usage : [buy|sell] <price> <quantity> <gtc|fak|fok>";
+            status_ = "usage : [buy|sell] <price> <quantity> <gtc|gfd|fak|fok>";
             return;
         }
 
@@ -164,6 +168,11 @@ void TerminalUI::HandleCommand(const std::string& line) {
 
         auto trades = orderbook_.ModifyOrder(OrderModify{ id, side, price, quantity });
         status_ = std::format("modify #{} -> {} {} @ {}, {} trade(s)", id, side == Side::Buy ? "buy" : "sell", quantity, price, trades.size());
+    }
+    else if (command == "eod") {
+        auto sizeBefore = orderbook_.Size();
+        orderbook_.EndOfDay();
+        status_ = std::format("end of day: cancelled {} gfd order(s)", sizeBefore - orderbook_.Size());
     }
     else if (command == "help") {
         status_ = helpText;

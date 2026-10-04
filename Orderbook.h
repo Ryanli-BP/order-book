@@ -18,7 +18,7 @@ private:
 
     struct OrderEntry {
         OrderPointer order_ { nullptr };
-        OrderQueue::iterator location_;
+        OrderQueue::iterator location_; //for bids_/asks_
     };
 
     std::map<Price, OrderQueue, std::greater<Price>> bids_;
@@ -39,9 +39,12 @@ public:
 
     Trades ModifyOrder(OrderModify order);
 
+    void EndOfDay();
+
     std::size_t Size() const { return orders_.size(); }
 
     bool HasOrder(OrderId orderId) const { return orders_.contains(orderId); }
 
     OrderbookLevelInfos GetOrderInfos() const;
+    
 };

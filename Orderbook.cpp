@@ -210,3 +210,15 @@ OrderbookLevelInfos Orderbook::GetOrderInfos() const {
     
     return OrderbookLevelInfos{ bidInfos, askInfos };
 }
+
+void Orderbook::EndOfDay() {
+    OrderIds goodForDayOrders{};
+    for (const auto& [orderId, orderEntry] : orders_) {
+        if (orderEntry.order_->GetOrderType() == OrderType::GoodForDay)
+            goodForDayOrders.push_back(orderId);
+    }
+
+    for (auto orderId : goodForDayOrders) {
+        CancelOrder(orderId);
+    }
+}

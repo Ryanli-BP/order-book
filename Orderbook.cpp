@@ -79,12 +79,12 @@ Trades Orderbook::AddOrder(OrderPointer order) {
     if (order->GetSide() == Side::Buy) {
         auto& bidLevel = bids_[order->GetPrice()];
         bidLevel.push_back(order);
-        iterator = std::next(bidLevel.begin(), bidLevel.size() - 1);
+        iterator = std::prev(bidLevel.end());
     }
     else {
         auto& askLevel = asks_[order->GetPrice()];
         askLevel.push_back(order);
-        iterator = std::next(askLevel.begin(), askLevel.size() - 1);
+        iterator = std::prev(askLevel.end());
     }
 
     orders_.insert({ order->GetOrderId(), OrderEntry{order, iterator} });

@@ -55,7 +55,9 @@ namespace {
 
     struct LatencyResult {
         std::vector<nanoseconds> latencies;
+        std::array<std::vector<nanoseconds>, 3> latenciesByType;   // indexed by OpType: add, cancel, market
         std::size_t tradeCount;
+        std::size_t finalBookSize;
     };
 
     // Times every operation individually.
@@ -70,9 +72,15 @@ namespace {
             Clock::time_point before = Clock::now();
             result.tradeCount += Apply(orderbook, operations[i]);
             Clock::time_point after = Clock::now();
-            result.latencies.push_back(duration_cast<nanoseconds>(after - before));
+
+            nanoseconds latency = duration_cast<nanoseconds>(after - before);
+            result.latencies.push_back(latency);
+
+            std::size_t typeIndex = static_cast<std::size_t>(operations[i].type);
+            result.latenciesByType[typeIndex].push_back(latency);
         }
 
+        result.finalBookSize = orderbook.Size();
         return result;
     }
 
@@ -127,4 +135,19 @@ int main() {
     std::cout << std::format("throughput: {:.2f} M ops/s\n", operationsPerSecond / 1'000'000.0);
     std::cout << std::format("trades: {} (latency pass) / {} (throughput pass)\n",
                              latency.tradeCount, throughput.tradeCount);
+
+    constexpr std::array<const char*, 3> TypeNames{ "add", "cancel", "market" };   // same order as OpType
+
+    for (std::size_t type{0}; type < 3; ++type) {
+        std::vector<nanoseconds>& typeLatencies = latency.latenciesByType[type];
+        std::sort(typeLatencies.begin(), typeLatencies.end());
+
+        std::cout << std::format("{:<8} count {:>8}   p50 {:>8} ns   p99 {:>8} ns\n",
+                                TypeNames[type],
+                                typeLatencies.size(),
+                                Percentile(typeLatencies, 0.50).count(),
+                                Percentile(typeLatencies, 0.99).count());
+    }
+
+    std::cout << std::format("final book size: {}\n", latency.finalBookSize);
 }

@@ -2,3 +2,4 @@ orderbook
 main
 *.o
 build/
+.vscode/

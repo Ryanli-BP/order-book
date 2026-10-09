@@ -3,3 +3,4 @@ main
 *.o
 build/
 .vscode/
+build-release/

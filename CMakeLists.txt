@@ -14,11 +14,11 @@ if(ENABLE_SANITIZERS)
 endif()
 
 # The engine: every .cpp except main.cpp and the UI
-add_library(orderbook_lib Orderbook.cpp)
-target_include_directories(orderbook_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+add_library(orderbook_lib engine/Orderbook.cpp)
+target_include_directories(orderbook_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/engine)
 
 # The interactive UI
-add_executable(orderbook main.cpp TerminalUI.cpp)
+add_executable(orderbook ui/main.cpp ui/TerminalUI.cpp)
 target_link_libraries(orderbook PRIVATE orderbook_lib)
 
 add_executable(orderbook_bench bench/Benchmark.cpp bench/WorkloadGenerator.cpp)

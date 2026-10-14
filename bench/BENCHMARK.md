@@ -32,3 +32,16 @@ add      count   600420   p50      150 ns   p99     2445 ns
 cancel   count   299667   p50      371 ns   p99      952 ns
 market   count    99913   p50      341 ns   p99     2746 ns
 final book size: 314656
+
+//added spikes, ran multiple times to prove that it's deterministic
+type         count       p50       p99     p99.9         max
+all        1000000       160      2412      9896    16834136
+add         600420       140      2502     12311     8925291
+cancel      299667       230       890      1411       69349
+market       99913       320      2792     14249    16834136
+throughput: 4.23 M ops/s
+spikes over 1ms: 3
+  index   126387  add          1368425 ns
+  index   266163  add          8925291 ns
+  index   552150  market      16834136 ns
+trades: 255967 / 255967   final book size: 314656

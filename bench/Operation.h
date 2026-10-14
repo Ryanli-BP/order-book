@@ -11,6 +11,8 @@ enum class OpType {
     Market
 };
 
+inline constexpr std::size_t OpTypeCount = 3;
+
 struct Operation {
     OpType type;
     OrderId id;

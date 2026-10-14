@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <memory>
 #include <vector>
+#include <iostream>
 
 namespace {
     using Clock = std::chrono::steady_clock;
@@ -60,8 +61,16 @@ LatencyResult RunLatencyPass(const Operations& operations, std::size_t prefillCo
 
     for (std::size_t i{prefillCount}; i < operations.size(); ++i) {
         Clock::time_point before = Clock::now();
+        std::size_t bucketsBefore = orderbook.OrderLookupBucketCount();
+
         result.tradeCount += Apply(orderbook, operations[i]);
+
         Clock::time_point after = Clock::now();
+        std::size_t bucketsAfter = orderbook.OrderLookupBucketCount();
+        if (bucketsAfter != bucketsBefore) {
+            std::cout << std::format("rehash at index {}: {} -> {} buckets, {} orders\n",
+                                    i, bucketsBefore, bucketsAfter, orderbook.Size());
+        }
 
         nanoseconds latency = duration_cast<nanoseconds>(after - before);
         result.latencies.push_back(latency);

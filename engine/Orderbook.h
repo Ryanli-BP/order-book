@@ -43,6 +43,8 @@ public:
 
     std::size_t Size() const { return orders_.size(); }
 
+    std::size_t OrderLookupBucketCount() const { return orders_.bucket_count(); }
+
     bool HasOrder(OrderId orderId) const { return orders_.contains(orderId); }
 
     OrderbookLevelInfos GetOrderInfos() const;

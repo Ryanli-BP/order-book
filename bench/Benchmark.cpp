@@ -15,8 +15,8 @@ int main() {
     WorkloadGenerator generator{ 42 };
     const Operations operations = generator.GenerateWorkload(PrefillCount, OperationCount);
 
-    const LatencyResult latency = RunLatencyPass(operations, PrefillCount);
-    const ThroughputResult throughput = RunThroughputPass(operations, PrefillCount);
+    const LatencyResult latency = RunLatencyPass(operations, PrefillCount, OperationCount);
+    const ThroughputResult throughput = RunThroughputPass(operations, PrefillCount, OperationCount);
 
     PrintLatencyHeader();
     PrintLatencyRow("all", latency.latencies);

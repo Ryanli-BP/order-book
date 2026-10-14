@@ -52,8 +52,8 @@ namespace {
     }
 }
 
-LatencyResult RunLatencyPass(const Operations& operations, std::size_t prefillCount) {
-    Orderbook orderbook{};
+LatencyResult RunLatencyPass(const Operations& operations, std::size_t prefillCount, std::size_t OperationCount) {
+    Orderbook orderbook{ OperationCount };
     ApplyPrefill(orderbook, operations, prefillCount);
 
     LatencyResult result{};
@@ -61,16 +61,8 @@ LatencyResult RunLatencyPass(const Operations& operations, std::size_t prefillCo
 
     for (std::size_t i{prefillCount}; i < operations.size(); ++i) {
         Clock::time_point before = Clock::now();
-        std::size_t bucketsBefore = orderbook.OrderLookupBucketCount();
-
         result.tradeCount += Apply(orderbook, operations[i]);
-
         Clock::time_point after = Clock::now();
-        std::size_t bucketsAfter = orderbook.OrderLookupBucketCount();
-        if (bucketsAfter != bucketsBefore) {
-            std::cout << std::format("rehash at index {}: {} -> {} buckets, {} orders\n",
-                                    i, bucketsBefore, bucketsAfter, orderbook.Size());
-        }
 
         nanoseconds latency = duration_cast<nanoseconds>(after - before);
         result.latencies.push_back(latency);
@@ -93,8 +85,8 @@ LatencyResult RunLatencyPass(const Operations& operations, std::size_t prefillCo
     return result;
 }
 
-ThroughputResult RunThroughputPass(const Operations& operations, std::size_t prefillCount) {
-    Orderbook orderbook{};
+ThroughputResult RunThroughputPass(const Operations& operations, std::size_t prefillCount, std::size_t OperationCount) {
+    Orderbook orderbook{ OperationCount };
     ApplyPrefill(orderbook, operations, prefillCount);
 
     ThroughputResult result{};

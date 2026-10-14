@@ -46,7 +46,7 @@ spikes over 1ms: 3
   index   552150  market      16834136 ns
 trades: 255967 / 255967   final book size: 314656
 
-//suspecting rehash or unodered_map to be the culprit of, spike, proven with prints
+//suspecting rehash of unodered_map to be the culprit of, spike, proven with prints
 rehash at index 18691: 10273 -> 20753 buckets, 10274 orders
 rehash at index 56123: 20753 -> 42043 buckets, 20754 orders
 rehash at index 126387: 42043 -> 85229 buckets, 42044 orders
@@ -62,4 +62,14 @@ spikes over 1ms: 3
   index   126387  add          3142471 ns
   index   266163  add          6012989 ns
   index   552150  market      16852197 ns
+trades: 255967 / 255967   final book size: 314656
+
+Constructor of Orderbook now reserve(), eliminating rehash of unordered_map during add operations
+type         count       p50       p99     p99.9         max
+all        1000000       121      2314     17402      116462
+add         600420       110      2374     18555       92462
+cancel      299667       140       881      1172      116462
+market       99913       260      2675     19256       60012
+throughput: 5.99 M ops/s
+spikes over 1ms: none
 trades: 255967 / 255967   final book size: 314656

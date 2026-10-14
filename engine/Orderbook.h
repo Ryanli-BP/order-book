@@ -33,6 +33,10 @@ private:
 
 public:
 
+    explicit Orderbook(std::size_t expectedOrders = 0) {
+        orders_.reserve(expectedOrders);
+    }
+
     Trades AddOrder(OrderPointer order);
 
     void CancelOrder(OrderId orderId);

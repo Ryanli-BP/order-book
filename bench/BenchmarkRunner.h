@@ -27,7 +27,7 @@ struct ThroughputResult {
 };
 
 // Times every operation individually.
-LatencyResult RunLatencyPass(const Operations& operations, std::size_t prefillCount);
+LatencyResult RunLatencyPass(const Operations& operations, std::size_t prefillCount, std::size_t OperationCount);
 
 // One timer around the whole run, so per-operation clock calls don't distort it.
-ThroughputResult RunThroughputPass(const Operations& operations, std::size_t prefillCount);
+ThroughputResult RunThroughputPass(const Operations& operations, std::size_t prefillCount, std::size_t OperationCount);

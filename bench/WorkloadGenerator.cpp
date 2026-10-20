@@ -34,7 +34,7 @@ Operation WorkloadGenerator::GenerateCancel() {
     std::size_t index = indexDist(rng_);
     OrderId id = addedIds_[index];
     
-    return Operation{ OpType::Cancel, id};
+    return Operation{ OpType::Cancel, id, Side::Buy, InvalidPrice, 0 };
 
 }
 

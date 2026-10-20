@@ -21,12 +21,13 @@ private:
     std::map<Price, OrderQueue, std::greater<Price>> bids_;
     std::map<Price, OrderQueue, std::less<Price>> asks_;
     std::unordered_map<OrderId, OrderEntry> orders_;
+    Trades trades_;
 
     bool CanMatch(Side side, Price price) const;
 
     bool CanFullyFill(Side side, Price price, Quantity quantity) const;
 
-    Trades MatchOrders();
+    Trades& MatchOrders();
 
 public:
 
@@ -34,11 +35,11 @@ public:
         orders_.reserve(expectedOrders);
     }
 
-    Trades AddOrder(OrderPointer order);
+    Trades& AddOrder(OrderPointer order);
 
     void CancelOrder(OrderId orderId);
 
-    Trades ModifyOrder(OrderModify order);
+    Trades& ModifyOrder(OrderModify order);
 
     void EndOfDay();
 

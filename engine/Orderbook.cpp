@@ -47,27 +47,37 @@ bool Orderbook::CanFullyFill(Side side, Price price, Quantity quantity) const {
     return availableQuantity >= quantity;
 }
 
-Trades Orderbook::AddOrder(OrderPointer order) {
-    if (orders_.contains(order->GetOrderId()))
-        return {};
+Trades& Orderbook::AddOrder(OrderPointer order) {
+    if (orders_.contains(order->GetOrderId())) {
+        trades_.clear();
+        return trades_;
+    }
 
-    if (order->GetOrderType() == OrderType::FillAndKill && !CanMatch(order->GetSide(), order->GetPrice()))
-        return {};
+    if (order->GetOrderType() == OrderType::FillAndKill && !CanMatch(order->GetSide(), order->GetPrice())) {
+        trades_.clear();
+        return trades_;
+    }
 
-    if (order->GetOrderType() == OrderType::FillOrKill && !CanFullyFill(order->GetSide(), order->GetPrice(), order->GetInitialQuantity()))
-        return {};
+    if (order->GetOrderType() == OrderType::FillOrKill && !CanFullyFill(order->GetSide(), order->GetPrice(), order->GetInitialQuantity())) {
+        trades_.clear();
+        return trades_;
+    }
 
     if (order->GetOrderType() == OrderType::Market) {
         if (order->GetSide() == Side::Buy) {
-            if (!asks_.size())
-                return {};
+            if (!asks_.size()) {
+                trades_.clear();
+                return trades_;
+            }
 
             const auto& [price, _] = *asks_.rbegin();
             order->MarketToLimitOrder(price);
         }
         else {
-            if (!bids_.size())
-                return {};
+            if (!bids_.size()) {
+                trades_.clear();
+                return trades_;
+            }
 
             const auto& [price, _] = *bids_.rbegin();
             order->MarketToLimitOrder(price);
@@ -91,8 +101,8 @@ Trades Orderbook::AddOrder(OrderPointer order) {
     return MatchOrders();
 }
 
-Trades Orderbook::MatchOrders() {
-    Trades trades;
+Trades& Orderbook::MatchOrders() {
+    trades_.clear();
 
     while (true) {
         if (bids_.empty() || asks_.empty())
@@ -123,7 +133,7 @@ Trades Orderbook::MatchOrders() {
                 orders_.erase(ask->GetOrderId());
             }
             
-            trades.push_back(Trade{
+            trades_.push_back(Trade{
                 TradeInfo{ bid->GetOrderId(), bid->GetPrice(), quantity },
                 TradeInfo{ ask->GetOrderId(), ask->GetPrice(), quantity } 
             });
@@ -150,7 +160,7 @@ Trades Orderbook::MatchOrders() {
             CancelOrder(order->GetOrderId());
     }
 
-    return trades;
+    return trades_;
 }
 
 void Orderbook::CancelOrder(OrderId orderId) {
@@ -179,9 +189,9 @@ void Orderbook::CancelOrder(OrderId orderId) {
     orders_.erase(orderId);
 }
 
-Trades Orderbook::ModifyOrder(OrderModify order) {
+Trades& Orderbook::ModifyOrder(OrderModify order) {
     if (!orders_.contains(order.GetOrderId()))
-        return {};
+        return trades_;
     
     const auto type = orders_.at(order.GetOrderId()).order_->GetOrderType(); //copy before CancelOrder erases the entry
     CancelOrder(order.GetOrderId());

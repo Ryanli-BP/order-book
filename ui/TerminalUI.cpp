@@ -112,7 +112,7 @@ void TerminalUI::HandleCommand(const std::string& line) {
         Price price;
         Quantity quantity;
 
-        OrderType type;
+        OrderType type{};
         if (!(in >> price >> quantity >> type)) {
             status_ = "usage : [buy|sell] <price> <quantity> <gtc|gfd|fak|fok>";
             return;

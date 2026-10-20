@@ -94,3 +94,13 @@ market       99913       222      2455      8023       94540        5.91
 throughput: 8.35 M ops/s
 spikes over 1ms: none
 trades: 255967 / 255967   final book size: 314656
+
+//trades is now a member variable of orderbook, removing the need of allocating a vector/MatchOrder() call
+type         count       p50       p99     p99.9         max   allocs/op
+all        1000000        87      1032      5148       65124        2.45
+add         600420        77      2150      5455       65124        3.25
+cancel      299667       116       800      1128       37531        0.00
+market       99913       203      2304      9293       26788        5.00
+throughput: 8.84 M ops/s
+spikes over 1ms: none
+trades: 255967 / 255967   final book size: 314656

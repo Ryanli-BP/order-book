@@ -26,7 +26,7 @@ namespace {
                     operation.side,
                     operation.price,
                     operation.quantity);
-                Trades trades = orderbook.AddOrder(order);
+                Trades& trades = orderbook.AddOrder(order);
                 return trades.size();
             }
             case OpType::Cancel: {
@@ -38,7 +38,7 @@ namespace {
                     operation.id,
                     operation.side,
                     operation.quantity);
-                Trades trades = orderbook.AddOrder(order);
+                Trades& trades = orderbook.AddOrder(order);
                 return trades.size();
             }
         }

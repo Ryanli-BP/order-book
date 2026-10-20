@@ -104,3 +104,13 @@ market       99913       203      2304      9293       26788        5.00
 throughput: 8.84 M ops/s
 spikes over 1ms: none
 trades: 255967 / 255967   final book size: 314656
+
+//fixed the bug of creating a copy in BenchmarkRunner.cpp Apply() 
+type         count       p50       p99     p99.9         max   allocs/op
+all        1000000        88      1109      4407      172615        2.31
+add         600420        78      2160      5049       48263        3.18
+cancel      299667       126       865      1226      172615        0.00
+market       99913       195      2325      5234       41337        4.00
+throughput: 8.74 M ops/s
+spikes over 1ms: none
+trades: 255967 / 255967   final book size: 314656

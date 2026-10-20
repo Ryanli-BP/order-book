@@ -93,7 +93,6 @@ Trades Orderbook::AddOrder(OrderPointer order) {
 
 Trades Orderbook::MatchOrders() {
     Trades trades;
-    trades.reserve(orders_.size());
 
     while (true) {
         if (bids_.empty() || asks_.empty())

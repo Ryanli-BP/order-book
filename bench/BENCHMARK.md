@@ -84,3 +84,13 @@ market       99913       232      2518     17402       60286        5.00
 throughput: 7.06 M ops/s
 spikes over 1ms: none
 trades: 255967 / 255967   final book size: 314656
+
+//Removed "trades.reserve(orders_.size())"
+type         count       p50       p99     p99.9         max   allocs/op
+all        1000000        87      1102      5567      116496        2.56
+add         600420        77      2291      8651      116496        3.28
+cancel      299667       126       860      1227       50986        0.00
+market       99913       222      2455      8023       94540        5.91
+throughput: 8.35 M ops/s
+spikes over 1ms: none
+trades: 255967 / 255967   final book size: 314656

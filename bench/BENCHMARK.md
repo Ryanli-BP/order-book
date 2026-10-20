@@ -64,12 +64,23 @@ spikes over 1ms: 3
   index   552150  market      16852197 ns
 trades: 255967 / 255967   final book size: 314656
 
-Constructor of Orderbook now reserve(), eliminating rehash of unordered_map during add operations
+//Constructor of Orderbook now reserve(), eliminating rehash of unordered_map during add operations
 type         count       p50       p99     p99.9         max
 all        1000000       121      2314     17402      116462
 add         600420       110      2374     18555       92462
 cancel      299667       140       881      1172      116462
 market       99913       260      2675     19256       60012
 throughput: 5.99 M ops/s
+spikes over 1ms: none
+trades: 255967 / 255967   final book size: 314656
+
+//Added allocations/operations metric
+ryanl@DESKTOP-G285NJN:~/order-book$ ./build-release/orderbook_bench
+type         count       p50       p99     p99.9         max   allocs/op
+all        1000000       106      2218     15271       80539        3.01
+add         600420        97      2267     16978       80539        4.18
+cancel      299667       126       840      1226       40336        0.00
+market       99913       232      2518     17402       60286        5.00
+throughput: 7.06 M ops/s
 spikes over 1ms: none
 trades: 255967 / 255967   final book size: 314656

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 
 using Price = std::int32_t;

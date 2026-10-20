@@ -33,18 +33,35 @@ std::string_view OpTypeName(OpType type) {
 }
 
 void PrintLatencyHeader() {
-    std::cout << std::format("{:<8}{:>10}{:>10}{:>10}{:>10}{:>12}\n",
-                            "type", "count", "p50", "p99", "p99.9", "max");
+    std::cout << std::format("{:<8}{:>10}{:>10}{:>10}{:>10}{:>12}{:>12}\n",
+                            "type", "count", "p50", "p99", "p99.9", "max", "allocs/op");
 }
 
-void PrintLatencyRow(std::string_view label, const std::vector<nanoseconds>& sorted) {
-    std::cout << std::format("{:<8}{:>10}{:>10}{:>10}{:>10}{:>12}\n",
-                            label,
-                            sorted.size(),
-                            Percentile(sorted, 0.50).count(),
-                            Percentile(sorted, 0.99).count(),
-                            Percentile(sorted, 0.999).count(),
-                            sorted.back().count());
+void PrintLatencyRow(std::string_view label, const std::vector<nanoseconds>& sorted, std::size_t allocations) {
+    const double allocationsPerOp = static_cast<double>(allocations) / static_cast<double>(sorted.size());
+
+    std::cout << std::format("{:<8}{:>10}{:>10}{:>10}{:>10}{:>12}{:>12.2f}\n",
+                             label,
+                             sorted.size(),
+                             Percentile(sorted, 0.50).count(),
+                             Percentile(sorted, 0.99).count(),
+                             Percentile(sorted, 0.999).count(),
+                             sorted.back().count(),
+                             allocationsPerOp);
+}
+
+void PrintLatencyTable(const LatencyResult& latency) {
+    std::size_t totalAllocations = 0;
+    for (std::size_t allocations : latency.allocationsByType) {
+        totalAllocations += allocations;
+    }
+
+    PrintLatencyHeader();
+    PrintLatencyRow("all", latency.latencies, totalAllocations);
+
+    for (std::size_t i{0}; i < latency.latenciesByType.size(); ++i) {
+        PrintLatencyRow(OpTypeName(static_cast<OpType>(i)), latency.latenciesByType[i], latency.allocationsByType[i]);
+    }
 }
 
 void PrintThroughput(const ThroughputResult& throughput, std::size_t operationCount) {

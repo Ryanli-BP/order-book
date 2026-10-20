@@ -16,6 +16,7 @@ struct Spike {
 struct LatencyResult {
     std::vector<std::chrono::nanoseconds> latencies;
     std::array<std::vector<std::chrono::nanoseconds>, OpTypeCount> latenciesByType;   // indexed by OpType: add, cancel, market
+    std::array<std::size_t, OpTypeCount> allocationsByType{};
     std::size_t tradeCount;
     std::size_t finalBookSize;
     std::vector<Spike> spikes{};

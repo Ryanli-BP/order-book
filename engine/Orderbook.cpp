@@ -106,7 +106,7 @@ Trades Orderbook::MatchOrders() {
             break;
 
         while (bidLevel.size() && askLevel.size()) {
-            auto bid =  bidLevel.front();
+            auto bid = bidLevel.front();
             auto ask = askLevel.front();
 
             Quantity quantity = std::min(bid->GetRemainingQuantity(), ask->GetRemainingQuantity());

@@ -18,13 +18,7 @@ int main() {
     const LatencyResult latency = RunLatencyPass(operations, PrefillCount, OperationCount);
     const ThroughputResult throughput = RunThroughputPass(operations, PrefillCount, OperationCount);
 
-    PrintLatencyHeader();
-    PrintLatencyRow("all", latency.latencies);
-
-    for (std::size_t i{0}; i < latency.latenciesByType.size(); ++i) {
-        PrintLatencyRow(OpTypeName(static_cast<OpType>(i)), latency.latenciesByType[i]);
-    }
-
+    PrintLatencyTable(latency);
     PrintThroughput(throughput, OperationCount);
     PrintSpikes(latency.spikes);
 

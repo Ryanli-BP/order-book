@@ -21,7 +21,13 @@ target_include_directories(orderbook_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/engi
 add_executable(orderbook ui/main.cpp ui/TerminalUI.cpp)
 target_link_libraries(orderbook PRIVATE orderbook_lib)
 
-add_executable(orderbook_bench bench/Benchmark.cpp bench/BenchmarkRunner.cpp bench/BenchmarkReport.cpp bench/WorkloadGenerator.cpp)
+add_executable(orderbook_bench
+    bench/Benchmark.cpp
+    bench/WorkloadGenerator.cpp
+    bench/BenchmarkRunner.cpp
+    bench/BenchmarkReport.cpp
+    bench/AllocationCounter.cpp
+)
 target_link_libraries(orderbook_bench PRIVATE orderbook_lib)
 
 # GoogleTest, downloaded and built by CMake

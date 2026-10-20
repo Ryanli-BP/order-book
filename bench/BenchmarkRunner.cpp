@@ -1,4 +1,5 @@
 #include "BenchmarkRunner.h"
+#include "AllocationCounter.h"
 
 #include "Orderbook.h"
 
@@ -60,15 +61,20 @@ LatencyResult RunLatencyPass(const Operations& operations, std::size_t prefillCo
     result.latencies.reserve(operations.size() - prefillCount);
 
     for (std::size_t i{prefillCount}; i < operations.size(); ++i) {
+        std::size_t allocationsBefore = AllocationCount();
         Clock::time_point before = Clock::now();
+
         result.tradeCount += Apply(orderbook, operations[i]);
+
         Clock::time_point after = Clock::now();
+        std::size_t allocationsAfter = AllocationCount();
 
         nanoseconds latency = duration_cast<nanoseconds>(after - before);
         result.latencies.push_back(latency);
 
         std::size_t typeIndex = static_cast<std::size_t>(operations[i].type);
         result.latenciesByType[typeIndex].push_back(latency);
+        result.allocationsByType[typeIndex] += allocationsAfter - allocationsBefore;
 
         if (latency > 1ms) {
             result.spikes.push_back(Spike{i, operations[i].type, latency});

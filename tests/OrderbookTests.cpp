@@ -1,15 +1,13 @@
 #include <gtest/gtest.h>
 
-#include <memory>
-
 #include "Orderbook.h"
 
 namespace {
-    OrderPointer Buy(OrderId id, Quantity quantity, Price price, OrderType orderType=OrderType::GoodTillCancel) {
-        return std::make_shared<Order>(orderType, id, Side::Buy, quantity, price);
+    const Trades& Buy(Orderbook& orderbook, OrderId id, Price price, Quantity quantity, OrderType orderType=OrderType::GoodTillCancel) {
+        return orderbook.AddOrder(orderType, id, Side::Buy, price, quantity);
     }
-    OrderPointer Sell(OrderId id, Quantity quantity, Price price, OrderType orderType=OrderType::GoodTillCancel) {
-        return std::make_shared<Order>(orderType, id, Side::Sell, quantity, price);
+    const Trades& Sell(Orderbook& orderbook, OrderId id, Price price, Quantity quantity, OrderType orderType=OrderType::GoodTillCancel) {
+        return orderbook.AddOrder(orderType, id, Side::Sell, price, quantity);
     }
 }
 
@@ -20,9 +18,9 @@ TEST(OrderbookTests, CrossingOrdersTrade) {
     constexpr OrderId buyer = 1;
     constexpr OrderId seller = 2;
 
-    orderbook.AddOrder(Buy(buyer, 100, 10));
+    Buy(orderbook, buyer, 100, 10);
 
-    auto trades = orderbook.AddOrder(Sell(seller, 100, 4));
+    auto trades = Sell(orderbook, seller, 100, 4);
 
     //trades info is correct
     ASSERT_EQ(trades.size(), 1u);
@@ -44,10 +42,10 @@ TEST(OrderbookTests, WalksMultipleLevels) {
     constexpr OrderId expensiveSeller = 2;
     constexpr OrderId buyer = 3;
 
-    orderbook.AddOrder(Sell(cheapSeller, 100, 5));
-    orderbook.AddOrder(Sell(expensiveSeller, 101, 5));
+    Sell(orderbook, cheapSeller, 100, 5);
+    Sell(orderbook, expensiveSeller, 101, 5);
 
-    auto trades = orderbook.AddOrder(Buy(buyer, 101, 8));
+    auto trades = Buy(orderbook, buyer, 101, 8);
 
     //best price first, then the next level
     ASSERT_EQ(trades.size(), 2u);
@@ -69,10 +67,10 @@ TEST(OrderbookTests, TimePriorityWithinLevel) {
     constexpr OrderId secondSeller = 2;
     constexpr OrderId buyer = 3;
 
-    orderbook.AddOrder(Sell(firstSeller, 100, 5));
-    orderbook.AddOrder(Sell(secondSeller, 100, 5));
+    Sell(orderbook, firstSeller, 100, 5);
+    Sell(orderbook, secondSeller, 100, 5);
 
-    auto trades = orderbook.AddOrder(Buy(buyer, 100, 5));
+    auto trades = Buy(orderbook, buyer, 100, 5);
 
     ASSERT_EQ(trades.size(), 1u);
     EXPECT_EQ(trades[0].GetAskTrade().orderId_, firstSeller);
@@ -88,9 +86,9 @@ TEST(OrderbookTests, FakCancelsRemainder) {
     constexpr OrderId seller = 1;
     constexpr OrderId buyer = 2;
 
-    orderbook.AddOrder(Sell(seller, 100, 5));
+    Sell(orderbook, seller, 100, 5);
 
-    auto trades = orderbook.AddOrder(Buy(buyer, 100, 8, OrderType::FillAndKill));
+    auto trades = Buy(orderbook, buyer, 100, 8, OrderType::FillAndKill);
 
     ASSERT_EQ(trades.size(), 1u);
     EXPECT_EQ(trades[0].GetBidTrade().quantity_, 5u);
@@ -107,10 +105,10 @@ TEST(OrderbookTests, FokHit) {
     constexpr OrderId expensiveSeller = 2;
     constexpr OrderId buyer = 3;
 
-    orderbook.AddOrder(Sell(cheapSeller, 100, 5));
-    orderbook.AddOrder(Sell(expensiveSeller, 101, 5));
+    Sell(orderbook, cheapSeller, 100, 5);
+    Sell(orderbook, expensiveSeller, 101, 5);
 
-    auto trades = orderbook.AddOrder(Buy(buyer, 101, 10, OrderType::FillOrKill));
+    auto trades = Buy(orderbook, buyer, 101, 10, OrderType::FillOrKill);
 
     ASSERT_EQ(trades.size(), 2u);
     EXPECT_EQ(trades[0].GetAskTrade().orderId_, cheapSeller);
@@ -128,11 +126,11 @@ TEST(OrderbookTests, FokMiss) {
     constexpr OrderId tooExpensiveSeller = 3;
     constexpr OrderId buyer = 4;
 
-    orderbook.AddOrder(Sell(cheapSeller, 100, 5));
-    orderbook.AddOrder(Sell(expensiveSeller, 101, 5));
-    orderbook.AddOrder(Sell(tooExpensiveSeller, 102, 5)); //enough in total, but above the limit
+    Sell(orderbook, cheapSeller, 100, 5);
+    Sell(orderbook, expensiveSeller, 101, 5);
+    Sell(orderbook, tooExpensiveSeller, 102, 5); //enough in total, but above the limit
 
-    auto trades = orderbook.AddOrder(Buy(buyer, 101, 11, OrderType::FillOrKill));
+    auto trades = Buy(orderbook, buyer, 101, 11, OrderType::FillOrKill);
 
     EXPECT_TRUE(trades.empty());
 
@@ -151,10 +149,10 @@ TEST(OrderbookTests, MarketWalksBook) {
     constexpr OrderId expensiveSeller = 2;
     constexpr OrderId buyer = 3;
 
-    orderbook.AddOrder(Sell(cheapSeller, 100, 5));
-    orderbook.AddOrder(Sell(expensiveSeller, 101, 5));
+    Sell(orderbook, cheapSeller, 100, 5);
+    Sell(orderbook, expensiveSeller, 101, 5);
 
-    auto trades = orderbook.AddOrder(std::make_shared<Order>(buyer, Side::Buy, 8));
+    auto trades = orderbook.AddOrder(OrderType::Market, buyer, Side::Buy, InvalidPrice, 8);
 
     ASSERT_EQ(trades.size(), 2u);
     EXPECT_EQ(trades[0].GetAskTrade().orderId_, cheapSeller);
@@ -174,8 +172,8 @@ TEST(OrderbookTests, CancelRemovesOrder) {
     constexpr OrderId cancelledBuyer = 1;
     constexpr OrderId otherBuyer = 2;
 
-    orderbook.AddOrder(Buy(cancelledBuyer, 100, 10));
-    orderbook.AddOrder(Buy(otherBuyer, 99, 5));
+    Buy(orderbook, cancelledBuyer, 100, 10);
+    Buy(orderbook, otherBuyer, 99, 5);
 
     orderbook.CancelOrder(cancelledBuyer);
 
@@ -191,12 +189,12 @@ TEST(OrderbookTests, ModifyLosesTimePriority) {
     constexpr OrderId otherSeller = 2;
     constexpr OrderId buyer = 3;
 
-    orderbook.AddOrder(Sell(modifiedSeller, 100, 5));
-    orderbook.AddOrder(Sell(otherSeller, 100, 5));
+    Sell(orderbook, modifiedSeller, 100, 5);
+    Sell(orderbook, otherSeller, 100, 5);
 
     orderbook.ModifyOrder(OrderModify{ modifiedSeller, Side::Sell, 100, 3 }); //same price, back of the queue
 
-    auto trades = orderbook.AddOrder(Buy(buyer, 100, 5));
+    auto trades = Buy(orderbook, buyer, 100, 5);
 
     ASSERT_EQ(trades.size(), 1u);
     EXPECT_EQ(trades[0].GetAskTrade().orderId_, otherSeller);
@@ -214,10 +212,10 @@ TEST(OrderbookTests, EndOfDayCancelsOnlyGfd) {
     constexpr OrderId gfdSeller = 3;
     constexpr OrderId gtcSeller = 4;
 
-    orderbook.AddOrder(Buy(gfdBuyer, 100, 5, OrderType::GoodForDay));
-    orderbook.AddOrder(Buy(gtcBuyer, 99, 5));
-    orderbook.AddOrder(Sell(gfdSeller, 105, 3, OrderType::GoodForDay));
-    orderbook.AddOrder(Sell(gtcSeller, 106, 2));
+    Buy(orderbook, gfdBuyer, 100, 5, OrderType::GoodForDay);
+    Buy(orderbook, gtcBuyer, 99, 5);
+    Sell(orderbook, gfdSeller, 105, 3, OrderType::GoodForDay);
+    Sell(orderbook, gtcSeller, 106, 2);
 
     orderbook.EndOfDay();
 

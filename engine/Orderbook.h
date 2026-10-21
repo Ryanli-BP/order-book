@@ -8,6 +8,7 @@
 #include "OrderModify.h"
 #include "OrderbookLevelInfos.h"
 #include "Trade.h"
+#include "OrderPool.h"
 
 class Orderbook {
 
@@ -21,6 +22,7 @@ private:
     std::map<Price, OrderQueue, std::greater<Price>> bids_;
     std::map<Price, OrderQueue, std::less<Price>> asks_;
     std::unordered_map<OrderId, OrderEntry> orders_;
+    OrderPool orderPool_;
     Trades trades_;
 
     bool CanMatch(Side side, Price price) const;
@@ -31,15 +33,17 @@ private:
 
 public:
 
-    explicit Orderbook(std::size_t expectedOrders = 0) {
-        orders_.reserve(expectedOrders);
-    }
+   explicit Orderbook(std::size_t capacity = 10'000)
+       : orderPool_(capacity)
+   {
+       orders_.reserve(capacity);
+   }
 
-    Trades& AddOrder(OrderPointer order);
+    const Trades& AddOrder(OrderType type, OrderId id, Side side, Price price, Quantity quantity);
 
     void CancelOrder(OrderId orderId);
 
-    Trades& ModifyOrder(OrderModify order);
+    const Trades& ModifyOrder(OrderModify order);
 
     void EndOfDay();
 

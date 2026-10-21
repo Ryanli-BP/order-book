@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
-#include <memory>
 #include <vector>
 #include <iostream>
 
@@ -20,13 +19,12 @@ namespace {
     std::size_t Apply(Orderbook& orderbook, const Operation& operation) {
         switch (operation.type) {
             case OpType::Add: {
-                OrderPointer order = std::make_shared<Order>(
+                const Trades& trades = orderbook.AddOrder(
                     OrderType::GoodTillCancel,
                     operation.id,
                     operation.side,
                     operation.price,
                     operation.quantity);
-                Trades& trades = orderbook.AddOrder(order);
                 return trades.size();
             }
             case OpType::Cancel: {
@@ -34,11 +32,12 @@ namespace {
                 return 0;
             }
             case OpType::Market: {
-                OrderPointer order = std::make_shared<Order>(
+                const Trades& trades = orderbook.AddOrder(
+                    OrderType::Market,
                     operation.id,
                     operation.side,
+                    InvalidPrice,
                     operation.quantity);
-                Trades& trades = orderbook.AddOrder(order);
                 return trades.size();
             }
         }

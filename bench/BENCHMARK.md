@@ -114,3 +114,13 @@ market       99913       195      2325      5234       41337        4.00
 throughput: 8.74 M ops/s
 spikes over 1ms: none
 trades: 255967 / 255967   final book size: 314656
+
+//Now uses Object pooling (OrderPool.cpp) rather than sharedPointer per order
+type         count       p50       p99     p99.9         max   allocs/op
+all        1000000        68       646      2555       57598        1.61
+add         600420        67       232      2883       57598        2.18
+cancel      299667       116       733      1061       43551        0.00
+market       99913       164       935      4338       48072        3.00
+throughput: 10.64 M ops/s
+spikes over 1ms: none
+trades: 255967 / 255967   final book size: 314656

@@ -3,7 +3,6 @@
 #include <list>
 #include <exception>
 #include <format>
-#include <memory>
 
 #include "OrderType.h"
 #include "Side.h"
@@ -11,6 +10,9 @@
 
 class Order {
 public:
+
+    Order() = default;
+
     Order(OrderType orderType, OrderId orderId, Side side, Price price, Quantity quantity)
         : orderType_ { orderType }
         , orderId_ { orderId }
@@ -29,14 +31,6 @@ public:
         , initialQuantity_ { quantity }
         , remainingQuantity_ { quantity }
     {
-    }
-
-    void MarketToLimitOrder(Price price) {
-        if (orderType_ != OrderType::Market)
-            throw std::logic_error("MarketToLimitOrder called on a non-market order");
-
-        this->orderType_ = OrderType::GoodTillCancel;
-        this->price_ = price; 
     }
 
     OrderType GetOrderType() const { return orderType_; }
@@ -65,5 +59,5 @@ private:
     Quantity remainingQuantity_;
 };
 
-using OrderPointer = std::shared_ptr<Order>;
+using OrderPointer = Order*;
 using OrderQueue = std::list<OrderPointer>;

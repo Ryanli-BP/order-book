@@ -14,7 +14,7 @@ if(ENABLE_SANITIZERS)
 endif()
 
 # The engine: every .cpp except main.cpp and the UI
-add_library(orderbook_lib engine/Orderbook.cpp)
+add_library(orderbook_lib engine/Orderbook.cpp engine/OrderPool.cpp)
 target_include_directories(orderbook_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/engine)
 
 # The interactive UI

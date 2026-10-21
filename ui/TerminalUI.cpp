@@ -118,8 +118,7 @@ void TerminalUI::HandleCommand(const std::string& line) {
             return;
         }
 
-        OrderPointer order = std::make_shared<Order>(type, orderId_, side, price, quantity);
-        auto trades = orderbook_.AddOrder(order);
+        const auto& trades = orderbook_.AddOrder(type, orderId_, side, price, quantity);
         status_ = std::format("#{} {} {} @ {}, {} trade(s)", orderId_, command, quantity, price, trades.size());
         ++orderId_;
     }
@@ -131,8 +130,7 @@ void TerminalUI::HandleCommand(const std::string& line) {
             return;
         }
 
-        OrderPointer order = std::make_shared<Order>(orderId_, side, quantity);
-        auto trades = orderbook_.AddOrder(order);
+        const auto& trades = orderbook_.AddOrder(OrderType::Market, orderId_, side, InvalidPrice, quantity);
         status_ = std::format("#{} market {} {}, {} trade(s)", orderId_, side == Side::Buy ? "buy" : "sell", quantity, trades.size());
         ++orderId_;
     }
